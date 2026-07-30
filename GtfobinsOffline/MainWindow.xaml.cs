@@ -322,7 +322,7 @@ public partial class MainWindow : Window
             FontFamily = new FontFamily("Cascadia Mono, Consolas"),
             FontSize = 12.5,
             Padding = new Thickness(12),
-            Cursor = Cursors.IBeam,
+            Cursor = Cursors.Hand,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             MaxHeight = 220
         };

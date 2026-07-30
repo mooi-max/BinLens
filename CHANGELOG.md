@@ -2,6 +2,10 @@
 
 All notable changes to BinLens are documented in this file.
 
+## 0.1.2 - 2026-07-31
+
+- Changed command-box hover cursor to a hand pointer to make click-to-copy discoverable.
+
 ## 0.1.1 - 2026-07-30
 
 - Restored clearly separated command-detail sections for Sudo, SUID, limited SUID, Capabilities and unprivileged contexts.

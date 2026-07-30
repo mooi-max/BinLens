@@ -50,7 +50,7 @@ dotnet publish .\GtfobinsOffline\GtfobinsOffline.csproj `
 - 数据源：[GTFOBins](https://github.com/GTFOBins/GTFOBins.github.io)。
 - 命令、二进制名、路径与参数保持上游原文；中文只用于界面和说明。
 - 本项目为非官方客户端，不隶属于 GTFOBins。
-- 本项目遵循 [GPL-3.0-only](LICENSE)；上游许可证与版权声明随源数据保留。
+- 本项目遵循 [GPL-3.0-only](LICENSE)；上游许可证与版权声明随源数据保留，详见 [NOTICE.md](NOTICE.md)。
 - 请仅在拥有明确授权的环境中使用。BinLens 仅用于信息查询和本地文本解析，不会执行任何命令。
 
 ## 贡献

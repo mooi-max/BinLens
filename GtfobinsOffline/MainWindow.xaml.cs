@@ -411,7 +411,7 @@ public partial class MainWindow : Window
     private void AboutButton_Click(object sender, RoutedEventArgs e)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.1.0";
-        var message = $"BinLens · GTFOBins 离线速查（非官方）\n版本 {version}\n\n内置 {_entries.Count} 个 GTFOBins 条目。\n数据源：GTFOBins/GTFOBins.github.io\n许可证：GPL-3.0\n\n应用不执行命令；检索和 sudo -l 分析均在本地完成。";
+        var message = $"BinLens · GTFOBins 离线速查\n版本 {version}\n\n面向授权安全测试、系统审计和学习场景的 Windows 离线查询工具。\n\n• 内置 {_entries.Count} 个 GTFOBins 公开条目\n• 支持命令检索与 sudo -l 本地批量分析\n• 不执行命令，不上传粘贴内容，不收集账号、行为数据或遥测\n\n数据来源：GTFOBins/GTFOBins.github.io\n项目许可证：GPL-3.0\n\n请仅在拥有明确授权的系统、靶场或实验环境中使用。";
         MessageBox.Show(message, "关于", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 

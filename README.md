@@ -1,6 +1,6 @@
 # BinLens
 
-> 面向 Windows 的 GTFOBins 离线速查工具（非官方）
+> 面向授权渗透测试与安全审计的 Windows 离线 Linux 提权辅助查询工具（GTFOBins 非官方客户端）
 
 [![License](https://img.shields.io/badge/license-GPL--3.0--only-1f1f1f)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-1f1f1f)
@@ -8,14 +8,22 @@
 
 ![BinLens 深色主界面](GtfobinsOffline/Assets/readme-screenshot.jpg)
 
-## 它是做什么的？
+## 它如何帮助提权评估？
 
-BinLens 将 [GTFOBins](https://gtfobins.github.io/) 的公开条目内置到一个可双击运行的 Windows 应用中，用于在授权的安全测试、系统审计和学习环境里，快速查询 Linux 二进制程序已公开记录的使用场景。
+BinLens 将 [GTFOBins](https://gtfobins.github.io/) 的公开条目内置到可双击运行的 Windows 应用中，帮助授权渗透测试人员和系统审计人员快速核对 Linux 主机上可用二进制程序的**已公开提权路径与权限滥用场景**。
 
-它还能在本地分析 `sudo -l` 输出，识别其中出现的命令，并与内置条目进行匹配。应用只做检索、展示、复制和文本解析，**不会执行任何命令**。
+它可根据 Sudo、SUID、受限 SUID、Capabilities 与普通用户等上下文整理条目；也能在本地分析 `sudo -l` 输出，识别被授权的命令并匹配 GTFOBins 信息。应用只做检索、展示、复制和文本解析，**不会执行任何命令**。
+
+## 典型工作流
+
+1. 在已获授权的 Linux 主机或靶场中收集权限信息，例如 `sudo -l` 输出。
+2. 在 BinLens 的“批量分析”中粘贴原始输出，定位其中被授权的二进制程序。
+3. 查看对应的 Sudo、SUID 或 Capabilities 场景，核对版本、环境与授权范围。
+4. 将结果用于风险验证、修复建议和审计报告；实际执行前始终确认测试范围。
 
 ## 为什么使用 BinLens？
 
+- **面向提权核对**：以 Sudo、SUID、受限 SUID 和 Capabilities 等权限场景为核心组织方式，减少人工翻查成本。
 - **完全离线**：日常检索不依赖网络；数据随应用内置，适合断网靶场和内网环境。
 - **单文件运行**：下载 `BinLens-win-x64.exe` 后即可双击使用，无需安装 .NET 运行时。
 - **分类更清楚**：按 Sudo、SUID、受限 SUID、Capabilities、普通用户等上下文展示，便于快速判断场景。

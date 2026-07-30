@@ -411,10 +411,8 @@ public partial class MainWindow : Window
     private void AboutButton_Click(object sender, RoutedEventArgs e)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.1.0";
-        var message = _isChinese
-            ? $"BinLens · GTFOBins 离线速查（非官方）\n版本 {version}\n\n内置 {_entries.Count} 个 GTFOBins 条目。\n数据源：GTFOBins/GTFOBins.github.io\n许可证：GPL-3.0\n\n应用不执行命令；检索和 sudo -l 分析均在本地完成。"
-            : $"BinLens · GTFOBins Offline Lookup (Unofficial)\nVersion {version}\n\n{_entries.Count} GTFOBins entries are embedded.\nData: GTFOBins/GTFOBins.github.io\nLicense: GPL-3.0\n\nThe app never runs commands. Search and sudo -l analysis remain local.";
-        MessageBox.Show(message, _isChinese ? "关于" : "About", MessageBoxButton.OK, MessageBoxImage.Information);
+        var message = $"BinLens · GTFOBins 离线速查（非官方）\n版本 {version}\n\n内置 {_entries.Count} 个 GTFOBins 条目。\n数据源：GTFOBins/GTFOBins.github.io\n许可证：GPL-3.0\n\n应用不执行命令；检索和 sudo -l 分析均在本地完成。";
+        MessageBox.Show(message, "关于", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void AnalyzeButton_Click(object sender, RoutedEventArgs e)

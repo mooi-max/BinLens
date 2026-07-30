@@ -9,6 +9,7 @@ publish/
 release/
 release-*/
 verify-build*/
+.tools/
 .vs/
 *.user
 *.suo

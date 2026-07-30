@@ -191,6 +191,50 @@ public partial class MainWindow : Window
     private string FunctionLabel(string function) => _isChinese && FunctionZh.TryGetValue(function, out var label) ? label : function.Replace('-', ' ');
     private string ContextLabel(string context) => _isChinese && ContextZh.TryGetValue(context, out var label) ? label : context.Replace('-', ' ');
 
+    private static int ContextSortOrder(string context) => context.ToLowerInvariant() switch
+    {
+        "sudo" => 0,
+        "suid" => 1,
+        "limited-suid" => 2,
+        "capabilities" => 3,
+        "unprivileged" => 4,
+        _ => 99
+    };
+
+    private string ContextSectionDescription(string context) => _isChinese ? context.ToLowerInvariant() switch
+    {
+        "sudo" => "\u901a\u8fc7 sudo \u6388\u6743\u6267\u884c\u3002",
+        "suid" => "\u9700\u8981\u6b63\u786e\u7684 SUID \u4f4d\u548c\u6587\u4ef6\u6240\u6709\u6743\u3002",
+        "limited-suid" => "\u9002\u7528\u4e8e\u53d7\u9650\u7684 SUID \u573a\u666f\u3002",
+        "capabilities" => "\u9700\u8981\u4e3a\u53ef\u6267\u884c\u6587\u4ef6\u8bbe\u7f6e Linux Capabilities\u3002",
+        "unprivileged" => "\u666e\u901a\u7528\u6237\u4e0a\u4e0b\u6587\u4e2d\u53ef\u7528\u3002",
+        _ => ContextLabel(context)
+    } : $"{ContextLabel(context)} context";
+
+    private void AddContextSectionHeader(Panel panel, string context)
+    {
+        var header = new Border
+        {
+            Background = (Brush)Application.Current.Resources["SurfaceElevated"],
+            BorderBrush = (Brush)Application.Current.Resources["Border"],
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(14, 10, 14, 10),
+            Margin = new Thickness(0, 18, 0, 0)
+        };
+        var stack = new StackPanel();
+        stack.Children.Add(new TextBlock { Text = ContextLabel(context), FontSize = 15, FontWeight = FontWeights.SemiBold });
+        stack.Children.Add(new TextBlock
+        {
+            Text = ContextSectionDescription(context),
+            Foreground = (Brush)Application.Current.Resources["SecondaryForeground"],
+            Margin = new Thickness(0, 3, 0, 0),
+            TextWrapping = TextWrapping.Wrap
+        });
+        header.Child = stack;
+        panel.Children.Add(header);
+    }
+
     private void RenderEmptyDetail(string message)
     {
         DetailPanel.Children.Clear();
@@ -211,9 +255,16 @@ public partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(entry.Comment) && !_isChinese) panel.Children.Add(new TextBlock { Text = entry.Comment, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 14, 0, 0), Foreground = (Brush)Application.Current.Resources["SecondaryForeground"] });
 
         var variants = entry.Variants.Where(variant => contextFilter is null || string.Equals(variant.Context, contextFilter, StringComparison.OrdinalIgnoreCase))
-            .GroupBy(variant => (variant.Function, variant.Context)).Select(group => group.First()).ToArray();
+            .GroupBy(variant => (variant.Function, variant.Context)).Select(group => group.First())
+            .OrderBy(variant => ContextSortOrder(variant.Context)).ThenBy(variant => variant.Context).ThenBy(variant => variant.Function).ToArray();
+        string? currentContext = null;
         foreach (var variant in variants)
         {
+            if (!string.Equals(currentContext, variant.Context, StringComparison.OrdinalIgnoreCase))
+            {
+                AddContextSectionHeader(panel, variant.Context);
+                currentContext = variant.Context;
+            }
             var card = new Border
             {
                 Background = (Brush)Application.Current.Resources["SurfaceElevated"],

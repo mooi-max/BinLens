@@ -62,6 +62,7 @@
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="Foreground" Value="{DynamicResource Foreground}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Foreground}" />
             <Setter Property="Background" Value="{DynamicResource Surface}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
             <Setter Property="BorderThickness" Value="1" />

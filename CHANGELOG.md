@@ -2,6 +2,12 @@
 
 All notable changes to BinLens are documented in this file.
 
+## 0.1.3 - 2026-07-31
+
+- Improved dark-theme text-input caret contrast.
+- Refined light-theme context-filter selection states for clear, non-black active buttons.
+- Changed the Windows title bar to show the BinLens version.
+
 ## 0.1.2 - 2026-07-31
 
 - Changed command-box hover cursor to a hand pointer to make click-to-copy discoverable.

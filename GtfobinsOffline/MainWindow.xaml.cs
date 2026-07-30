@@ -95,7 +95,7 @@ public partial class MainWindow : Window
 
     private void ApplyLanguage()
     {
-        Title = _isChinese ? "BinLens · GTFOBins 离线速查" : "BinLens · GTFOBins Offline";
+        Title = $"BinLens v{Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0"}";
         AppTitle.Text = "BinLens";
         AppSubtitle.Text = _isChinese ? "GTFOBins 离线速查 · 本地数据 · 不执行命令" : "GTFOBins offline lookup · local data · never runs commands";
         LanguageButton.Content = _isChinese ? "English" : "中文";
@@ -182,9 +182,9 @@ public partial class MainWindow : Window
         foreach (var button in new[] { FilterAllButton, FilterSudoButton, FilterSuidButton, FilterCapabilitiesButton, FilterUserButton })
         {
             var active = string.Equals(button.Tag?.ToString(), _activeContext, StringComparison.OrdinalIgnoreCase);
-            button.Background = (Brush)Application.Current.Resources[active ? "Accent" : "Surface"];
+            button.Background = (Brush)Application.Current.Resources[active ? "AccentMuted" : "Surface"];
             button.BorderBrush = (Brush)Application.Current.Resources[active ? "Accent" : "Border"];
-            button.Foreground = active ? Brushes.White : (Brush)Application.Current.Resources["Foreground"];
+            button.Foreground = (Brush)Application.Current.Resources["Foreground"];
         }
     }
 

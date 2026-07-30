@@ -1,0 +1,37 @@
+name: Release Windows application
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Run self-test
+        run: dotnet run --project .\GtfobinsOffline.SelfTest\GtfobinsOffline.SelfTest.csproj -c Release
+      - name: Publish single-file EXE
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          dotnet publish .\GtfobinsOffline\GtfobinsOffline.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true "-p:GitHubRepository=${{ github.repository }}" "-p:ApplicationVersion=$version" -o .\publish
+      - name: Produce release assets
+        shell: pwsh
+        run: |
+          $file = Get-Item .\publish\BinLens.exe
+          $asset = '.\publish\BinLens-win-x64.exe'
+          Move-Item -LiteralPath $file.FullName -Destination $asset
+          $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $asset).Hash.ToLowerInvariant()
+          "$hash  BinLens-win-x64.exe" | Set-Content -NoNewline -Encoding ascii .\publish\BinLens-win-x64.exe.sha256
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create $env:GITHUB_REF_NAME .\publish\BinLens-win-x64.exe .\publish\BinLens-win-x64.exe.sha256 --generate-notes

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\App.ico</ApplicationIcon>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <AssemblyName>BinLens</AssemblyName>
+    <RootNamespace>GtfobinsOffline</RootNamespace>
+    <Version Condition="'$(ApplicationVersion)' == ''">0.1.0</Version>
+    <Version Condition="'$(ApplicationVersion)' != ''">$(ApplicationVersion)</Version>
+    <NuGetAudit>false</NuGetAudit>
+    <GitHubRepository Condition="'$(GitHubRepository)' == ''"></GitHubRepository>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\upstream\_gtfobins\*" Link="Data\Gtfobins\%(Filename)%(Extension)" LogicalName="GtfobinsData/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\upstream\LICENSE" Link="Data\UPSTREAM-LICENSE" LogicalName="GtfobinsData/LICENSE" />
+    <AssemblyMetadata Include="GitHubRepository" Value="$(GitHubRepository)" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+</Project>

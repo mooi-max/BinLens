@@ -2,6 +2,10 @@
 
 All notable changes to BinLens are documented in this file.
 
+## 0.1.4 - 2026-07-31
+
+- Fixed GitHub Actions restores for self-contained Windows release builds.
+
 ## 0.1.3 - 2026-07-31
 
 - Improved dark-theme text-input caret contrast.

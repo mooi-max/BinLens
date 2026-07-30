@@ -46,7 +46,8 @@ Assert(alternateMatches.Single(match => match.CommandName == "find").RunAs == "r
 Assert(alternateMatches.Single(match => match.CommandName == "python3").Tags == "SETENV", "Expected sudo tags to be retained.");
 Assert(alternateMatches.Single(match => match.CommandName == "kill").Kind == MatchKind.NotFound, "Expected non-listed commands to remain visible.");
 
-Assert(UpdateService.IsNewer("0.1.1"), "Expected semantic update comparison.");
+var installedVersion = typeof(UpdateService).Assembly.GetName().Version ?? new Version(0, 0, 0);
+Assert(UpdateService.IsNewer($"{installedVersion.Major}.{installedVersion.Minor}.{installedVersion.Build + 1}"), "Expected semantic update comparison.");
 Assert(!UpdateApplier.IsApplyRequest([]), "Normal startup must not invoke the updater.");
 Assert(!UpdateApplier.TryGetCleanupPath(["--cleanup-helper", "C:\\Windows\\System32\\notepad.exe"], out _), "Updater cleanup must not accept paths outside the temp directory.");
 var validHelperPath = Path.Combine(Path.GetTempPath(), "BinLens-Updater-test.exe");

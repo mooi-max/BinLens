@@ -13,15 +13,13 @@ namespace GtfobinsOffline;
 
 public partial class MainWindow : Window
 {
-    private enum BatchMode { Sudo, Suid }
-
     private readonly IReadOnlyList<GtfobinEntry> _entries;
     private readonly ObservableCollection<GtfobinEntry> _results = [];
     private readonly ObservableCollection<BatchMatch> _batchResults = [];
     private bool _isChinese = true;
     private bool _isDark;
     private string _activeContext = string.Empty;
-    private BatchMode _batchMode = BatchMode.Sudo;
+    private string _batchContext = string.Empty;
     private readonly AppSettings _settings;
 
     private static readonly IReadOnlyDictionary<string, string> FunctionZh = new Dictionary<string, string>
@@ -63,8 +61,8 @@ public partial class MainWindow : Window
         _isDark = _settings.IsDark;
         _entries = GtfobinsDataLoader.Load();
         ResultList.ItemsSource = _results;
-        ApplyLanguage();
         ApplyTheme();
+        ApplyLanguage();
         RefreshResults();
         PreviewKeyDown += MainWindow_PreviewKeyDown;
     }
@@ -110,15 +108,17 @@ public partial class MainWindow : Window
         BatchButton.Content = _isChinese ? "批量分析" : "Batch analysis";
         EmptyDetailTitle.Text = _isChinese ? "开始检索" : "Start searching";
         EmptyDetailText.Text = _isChinese ? "输入命令名，或使用批量分析粘贴 sudo -l 输出或 SUID 清单。" : "Enter a command name, or paste sudo -l output or a SUID file list into batch analysis.";
-        BatchTitle.Text = _batchMode == BatchMode.Sudo ? (_isChinese ? "批量分析 sudo -l" : "Batch analyze sudo -l") : (_isChinese ? "批量分析 SUID 清单" : "Batch analyze SUID file list");
-        BatchDescription.Text = _batchMode == BatchMode.Sudo
-            ? (_isChinese ? "粘贴原始输出；所有解析均在本机完成。" : "Paste raw output; all analysis remains on this device.")
-            : (_isChinese ? "粘贴 find 输出的 SUID 文件绝对路径（每行一个），例如 /usr/bin/find；所有解析均在本机完成。" : "Paste absolute SUID file paths from find output (one per line), e.g. /usr/bin/find; all analysis remains on this device.");
+        BatchTitle.Text = _isChinese ? "批量分析" : "Batch analysis";
+        BatchDescription.Text = _isChinese ? "粘贴 sudo -l 输出或 find 的 SUID 路径清单，自动识别格式；所有解析均在本机完成。" : "Paste sudo -l output or a find SUID path list; the format is detected automatically and all analysis remains on this device.";
+        BatchHint.Text = _isChinese ? "粘贴 sudo -l 输出或 find 的 SUID 路径清单…" : "Paste sudo -l output or a find SUID path list…";
         BackButton.Content = _isChinese ? "← 返回检索" : "← Back to search";
-        BatchModeSudoButton.Content = _isChinese ? "sudo -l 输出" : "sudo -l output";
-        BatchModeSuidButton.Content = _isChinese ? "SUID 清单" : "SUID file list";
-        AnalyzeButton.Content = _batchMode == BatchMode.Sudo ? (_isChinese ? "分析 sudo -l 输出" : "Analyze sudo -l output") : (_isChinese ? "分析 SUID 清单" : "Analyze SUID file list");
+        AnalyzeButton.Content = _isChinese ? "开始分析（Ctrl+Enter）" : "Analyze (Ctrl+Enter)";
         BatchResultTitle.Text = _isChinese ? "匹配结果" : "Matches";
+        BatchFilterAllButton.Content = _isChinese ? "全部" : "All";
+        BatchFilterSudoButton.Content = "Sudo";
+        BatchFilterSuidButton.Content = "SUID";
+        BatchFilterCapabilitiesButton.Content = "Capabilities";
+        BatchFilterUserButton.Content = _isChinese ? "普通用户" : "Unprivileged";
         StatusText.Text = _isChinese ? $"已内置 {_entries.Count} 个 GTFOBins 条目" : $"{_entries.Count} GTFOBins entries embedded";
         FilterAllButton.Content = _isChinese ? "全部" : "All";
         FilterSudoButton.Content = "Sudo";
@@ -126,7 +126,7 @@ public partial class MainWindow : Window
         FilterCapabilitiesButton.Content = "Capabilities";
         FilterUserButton.Content = _isChinese ? "普通用户" : "Unprivileged";
         RefreshFilterButtons();
-        RefreshBatchModeButtons();
+        RefreshBatchFilterButtons();
         RefreshResults();
         RefreshBatchLabels();
         UpdateSearchHint();
@@ -152,6 +152,7 @@ public partial class MainWindow : Window
         foreach (var (key, color) in colors) Application.Current.Resources[key] = new SolidColorBrush(color);
         Background = (Brush)Application.Current.Resources["AppBackground"];
         RefreshFilterButtons();
+        RefreshBatchFilterButtons();
     }
 
     private void RefreshResults()
@@ -196,12 +197,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RefreshBatchModeButtons()
+    private void RefreshBatchFilterButtons()
     {
-        if (BatchModeSudoButton is null || BatchModeSuidButton is null) return;
-        foreach (var button in new[] { BatchModeSudoButton, BatchModeSuidButton })
+        if (BatchFilterAllButton is null) return;
+        foreach (var button in new[] { BatchFilterAllButton, BatchFilterSudoButton, BatchFilterSuidButton, BatchFilterCapabilitiesButton, BatchFilterUserButton })
         {
-            var active = string.Equals(button.Tag?.ToString(), _batchMode == BatchMode.Sudo ? "sudo" : "suid", StringComparison.OrdinalIgnoreCase);
+            var active = string.Equals(button.Tag?.ToString(), _batchContext, StringComparison.OrdinalIgnoreCase);
             button.Background = (Brush)Application.Current.Resources[active ? "AccentMuted" : "Surface"];
             button.BorderBrush = (Brush)Application.Current.Resources[active ? "Accent" : "Border"];
             button.Foreground = (Brush)Application.Current.Resources["Foreground"];
@@ -434,7 +435,7 @@ public partial class MainWindow : Window
     private void AboutButton_Click(object sender, RoutedEventArgs e)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.1.0";
-        var message = $"BinLens · GTFOBins 离线速查\n版本 {version}\n\n面向授权安全测试、系统审计和学习场景的 Windows 离线查询工具。\n\n• 内置 {_entries.Count} 个 GTFOBins 公开条目\n• 支持命令检索与本地批量分析（sudo -l 输出、SUID 清单）\n• 不执行命令，不上传粘贴内容，不收集账号、行为数据或遥测\n\n数据来源：GTFOBins/GTFOBins.github.io\n项目许可证：GPL-3.0\n\n请仅在拥有明确授权的系统、靶场或实验环境中使用。";
+        var message = $"BinLens · GTFOBins 离线速查\n版本 {version}\n\n面向授权安全测试、系统审计和学习场景的 Windows 离线查询工具。\n\n• 内置 {_entries.Count} 个 GTFOBins 公开条目\n• 支持命令检索与本地批量分析（sudo -l / SUID 自动识别）\n• 不执行命令，不上传粘贴内容，不收集账号、行为数据或遥测\n\n数据来源：GTFOBins/GTFOBins.github.io\n项目许可证：GPL-3.0\n\n请仅在拥有明确授权的系统、靶场或实验环境中使用。";
         MessageBox.Show(message, "关于", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
@@ -447,39 +448,71 @@ public partial class MainWindow : Window
         catch (ArgumentException ex) { MessageBox.Show(ex.Message, _isChinese ? "无法分析" : "Cannot analyze", MessageBoxButton.OK, MessageBoxImage.Warning); }
     }
 
-    private void BatchModeButton_Click(object sender, RoutedEventArgs e)
-    {
-        _batchMode = string.Equals((sender as Button)?.Tag?.ToString(), "suid", StringComparison.OrdinalIgnoreCase) ? BatchMode.Suid : BatchMode.Sudo;
-        RefreshBatchModeButtons();
-        ApplyLanguage();
-        _batchResults.Clear();
-        RefreshBatchLabels();
-        BatchDetailPanel.Children.Clear();
-        BatchResultTitle.Text = _isChinese ? "匹配结果" : "Matches";
-        if (!string.IsNullOrWhiteSpace(BatchInput.Text)) AnalyzeBatch();
-    }
-
     private void AnalyzeBatch()
     {
-        var matches = _batchMode == BatchMode.Sudo ? SudoParser.Parse(BatchInput.Text, _entries) : SudoParser.ParseSuid(BatchInput.Text, _entries);
+        var matches = SudoParser.ParseAuto(BatchInput.Text, _entries)
+            .OrderBy(BatchResultColorRank)
+            .ThenBy(match => match.CommandName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
         _batchResults.Clear();
         foreach (var match in matches) _batchResults.Add(match);
         RefreshBatchLabels();
-        BatchResultTitle.Text = _isChinese ? $"匹配结果（{matches.Count}）" : $"Matches ({matches.Count})";
+        BatchResultTitle.Text = _isChinese ? $"匹配结果（{matches.Length}）" : $"Matches ({matches.Length})";
+        var sudoCount = matches.Count(match => !match.IsSuidAnalysis);
+        var suidCount = matches.Length - sudoCount;
+        StatusText.Text = _isChinese
+            ? $"已解析 {matches.Length} 条：sudo 规则 {sudoCount} · SUID 路径 {suidCount}；点击结果查看命令详情"
+            : $"Analyzed {matches.Length} items: {sudoCount} sudo rules · {suidCount} SUID paths; click a result for details";
         BatchDetailPanel.Children.Clear();
-        if (matches.Count == 0)
+        if (matches.Length == 0)
         {
-            var emptyMessage = _batchMode == BatchMode.Sudo
-                ? (_isChinese ? "未识别到 sudo 授权规则。请粘贴完整 sudo -l 输出。" : "No sudo authorization rules were found. Paste complete sudo -l output.")
-                : (_isChinese ? "未识别到 SUID 文件路径。请粘贴 find 输出，每行一个绝对路径（例如 /usr/bin/find）。" : "No SUID file paths were found. Paste find output with one absolute path per line (e.g. /usr/bin/find).");
+            var emptyMessage = _isChinese
+                ? "未识别到可分析的规则或路径。请粘贴完整 sudo -l 输出（如“(ALL) NOPASSWD: /usr/bin/find”），或 find 输出的 SUID 绝对路径清单（每行一个）。"
+                : "No recognizable rules or paths were found. Paste complete sudo -l output (e.g. “(ALL) NOPASSWD: /usr/bin/find”) or a find SUID path list with one absolute path per line.";
             BatchDetailPanel.Children.Add(new TextBlock { Text = emptyMessage, TextWrapping = TextWrapping.Wrap, Foreground = (Brush)Application.Current.Resources["SecondaryForeground"], Margin = new Thickness(0, 40, 0, 0) });
         }
         else BatchResultList.SelectedIndex = 0;
     }
 
+    private static int BatchResultColorRank(BatchMatch match) => match.Kind switch
+    {
+        MatchKind.Exact or MatchKind.OfficialAlias => 0,
+        MatchKind.Family or MatchKind.NoSuid => 1,
+        _ => 2
+    };
+
+    private void BatchFilterButton_Click(object sender, RoutedEventArgs e)
+    {
+        _batchContext = (sender as Button)?.Tag?.ToString() ?? string.Empty;
+        RefreshBatchFilterButtons();
+        if (BatchResultList.SelectedItem is BatchResultItem item && item.Match.Entry is not null)
+        {
+            RenderEntry(BatchDetailPanel, item.Match.Entry, string.IsNullOrEmpty(_batchContext) ? null : _batchContext, item.Match);
+        }
+    }
+
+    private void BatchInput_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (BatchHint is null || BatchInput is null) return;
+        BatchHint.Visibility = string.IsNullOrWhiteSpace(BatchInput.Text) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void BatchInput_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Enter)
+        {
+            AnalyzeButton_Click(sender, e);
+            e.Handled = true;
+        }
+    }
+
     private void BatchResultList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (BatchResultList.SelectedItem is not BatchResultItem item) return;
+        if (BatchResultList.SelectedItem is BatchResultItem item) RenderBatchSelection(item);
+    }
+
+    private void RenderBatchSelection(BatchResultItem item)
+    {
         var match = item.Match;
         if (match.Entry is null)
         {
@@ -489,7 +522,9 @@ public partial class MainWindow : Window
             BatchDetailPanel.Children.Add(new TextBox { Text = match.OriginalLine, IsReadOnly = true, TextWrapping = TextWrapping.Wrap, BorderThickness = new Thickness(0), Background = (Brush)Application.Current.Resources["SurfaceMuted"], Padding = new Thickness(10) });
             return;
         }
-        RenderEntry(BatchDetailPanel, match.Entry, _batchMode == BatchMode.Sudo ? "sudo" : "suid", match);
+        _batchContext = match.Kind == MatchKind.NoSuid ? string.Empty : match.IsSuidAnalysis ? "suid" : "sudo";
+        RefreshBatchFilterButtons();
+        RenderEntry(BatchDetailPanel, match.Entry, string.IsNullOrEmpty(_batchContext) ? null : _batchContext, match);
     }
 
     private async void UpdateButton_Click(object sender, RoutedEventArgs e)

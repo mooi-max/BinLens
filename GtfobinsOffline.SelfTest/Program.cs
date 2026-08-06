@@ -64,6 +64,12 @@ Assert(suidMatches.Single(match => match.CommandName == "find").Path == "/usr/bi
 Assert(SudoParser.ParseSuid("", entries).Count == 0, "Empty SUID input must yield no matches.");
 Assert(SudoParser.ParseSuid("not-a-path\n/usr/bin/sudo\n", entries).Count == 1, "Non-path noise lines must be ignored by SUID analysis.");
 
+var autoSudo = SudoParser.ParseAuto(sudoOutput, entries);
+Assert(autoSudo.Count == matches.Count && autoSudo.All(match => !match.IsSuidAnalysis), "Auto-detect must route sudo -l output to sudo parsing.");
+Assert(autoSudo.Any(match => match.CommandName == "su" && match.IsForbidden), "Auto-detect must preserve sudo continuation lines (forbidden rules without a RunAs group).");
+var autoSuid = SudoParser.ParseAuto(suidOutput, entries);
+Assert(autoSuid.Count == suidMatches.Count && autoSuid.All(match => match.IsSuidAnalysis), "Auto-detect must route plain path lists to SUID parsing.");
+
 var installedVersion = typeof(UpdateService).Assembly.GetName().Version ?? new Version(0, 0, 0);
 Assert(UpdateService.IsNewer($"{installedVersion.Major}.{installedVersion.Minor}.{installedVersion.Build + 1}"), "Expected semantic update comparison.");
 Assert(!UpdateApplier.IsApplyRequest([]), "Normal startup must not invoke the updater.");

@@ -59,8 +59,8 @@ public sealed record BatchResultItem(BatchMatch Match, string Label)
     {
         MatchKind.Exact or MatchKind.OfficialAlias => "Success",
         MatchKind.Family => "Warning",
-        MatchKind.NoSuid => "SecondaryForeground",
-        MatchKind.Forbidden => "Danger",
+        MatchKind.NoSuid => "Warning",
+        MatchKind.NotFound or MatchKind.Forbidden => "Danger",
         _ => "SecondaryForeground"
     }];
 

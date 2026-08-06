@@ -2,6 +2,14 @@
 
 All notable changes to BinLens are documented in this file.
 
+## 0.3.0 - 2026-08-06
+
+- Batch analysis now uses a single input box with automatic format detection: paste `sudo -l` rules or a SUID path list and the input is routed to the right parser automatically. The manual mode switch is gone.
+- Batch results are grouped by importance: exact matches and official aliases first (green), version-family and no-SUID-usage matches next (yellow), not-listed and forbidden rules last (red).
+- The batch detail panel gained context filter buttons (All / Sudo / SUID / Capabilities / Unprivileged); selecting an exact SUID match shows its SUID commands by default, while a no-SUID-usage match shows every related context so the relevant commands are never hidden.
+- Batch analysis now shows a parsing summary in the status bar (sudo rules vs SUID paths) and supports `Ctrl+Enter` to run, with a placeholder hint in the input box.
+- Fixed button text/theme contrast issues by making theme application refresh all dynamically styled buttons (including on startup with a saved dark theme).
+
 ## 0.2.0 - 2026-08-06
 
 - Added SUID batch analysis: paste the absolute-path output of `find / -perm -u=s -type f 2>/dev/null` (or a similar SUID file list) and match every binary against the GTFOBins `suid` entries in one pass.

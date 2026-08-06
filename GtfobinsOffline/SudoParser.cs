@@ -59,6 +59,25 @@ public static class SudoParser
     }
 
     /// <summary>
+    /// Automatically detects whether the input looks like <c>sudo -l</c> rules or a plain
+    /// SUID path list and routes the whole input to the matching parser. When any line contains
+    /// a RunAs group or a sudo tag such as <c>NOPASSWD:</c> the input is treated as sudo output
+    /// (preserving sudo rule continuation lines); otherwise absolute paths are matched against
+    /// the SUID entries.
+    /// </summary>
+    public static IReadOnlyList<BatchMatch> ParseAuto(string input, IReadOnlyList<GtfobinEntry> entries)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return [];
+        if (input.Length > 1_048_576) throw new ArgumentException("输入内容超过 1 MB，无法安全分析。");
+
+        var lines = input.Replace("\r\n", "\n").Split('\n').Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+        var normalized = string.Join(Environment.NewLine, lines);
+        if (lines.Any(IsSudoRuleLine)) return Parse(normalized, entries);
+        if (lines.Any(line => PathPattern.IsMatch(line))) return ParseSuid(normalized, entries);
+        return [];
+    }
+
+    /// <summary>
     /// Analyzes a plain list of SUID file paths (for example the output of
     /// <c>find / -perm -u=s -type f 2&gt;/dev/null</c>) and matches each path
     /// against the GTFOBins entries that have an official <c>suid</c> usage.
@@ -117,6 +136,9 @@ public static class SudoParser
 
     private static bool HasSuidUsage(GtfobinEntry? entry)
         => entry is not null && entry.Variants.Any(variant => string.Equals(variant.Context, "suid", StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsSudoRuleLine(string line)
+        => (line.Contains('(') && line.Contains(')')) || TagsPattern.IsMatch(line);
 
     private static bool TryFindFamily(IReadOnlyList<GtfobinEntry> entries, string name, out GtfobinEntry? entry)
     {

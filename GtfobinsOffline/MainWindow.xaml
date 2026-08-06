@@ -89,7 +89,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="12" />
-                <RowDefinition Height="190" />
+                <RowDefinition Height="210" />
                 <RowDefinition Height="12" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
@@ -97,15 +97,12 @@
                 <Button x:Name="BackButton" Content="← 返回检索" Click="BackButton_Click" Margin="0,0,12,0" />
                 <StackPanel>
                     <TextBlock x:Name="BatchTitle" FontSize="20" FontWeight="SemiBold" />
-                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <Button x:Name="BatchModeSudoButton" Tag="sudo" Content="sudo -l 输出" Click="BatchModeButton_Click" Margin="0,0,8,0" />
-                        <Button x:Name="BatchModeSuidButton" Tag="suid" Content="SUID 清单" Click="BatchModeButton_Click" />
-                    </StackPanel>
                     <TextBlock x:Name="BatchDescription" Foreground="{DynamicResource SecondaryForeground}" FontSize="12" Margin="0,6,0,0" />
                 </StackPanel>
             </StackPanel>
             <Grid Grid.Row="2">
-                <TextBox x:Name="BatchInput" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontFamily="Cascadia Mono, Consolas" FontSize="13" Padding="12" />
+                <TextBox x:Name="BatchInput" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontFamily="Cascadia Mono, Consolas" FontSize="13" Padding="12" TextChanged="BatchInput_TextChanged" PreviewKeyDown="BatchInput_PreviewKeyDown" />
+                <TextBlock x:Name="BatchHint" IsHitTestVisible="False" Foreground="{DynamicResource TertiaryForeground}" Margin="15,13,0,0" VerticalAlignment="Top" Visibility="Visible" TextWrapping="Wrap" />
                 <Button x:Name="AnalyzeButton" Content="分析 sudo -l 输出" Style="{StaticResource AccentButton}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,12,12" Click="AnalyzeButton_Click" />
             </Grid>
             <Grid Grid.Row="4">
@@ -127,7 +124,16 @@
                     </DockPanel>
                 </Border>
                 <Border Grid.Column="2" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="10" Padding="20">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="BatchDetailPanel" /></ScrollViewer>
+                    <DockPanel>
+                        <WrapPanel x:Name="BatchFilterBar" DockPanel.Dock="Top" Margin="0,0,0,10">
+                            <Button x:Name="BatchFilterAllButton" Tag="" Content="全部" Click="BatchFilterButton_Click" Margin="0,0,8,0" />
+                            <Button x:Name="BatchFilterSudoButton" Tag="sudo" Content="Sudo" Click="BatchFilterButton_Click" Margin="0,0,8,0" />
+                            <Button x:Name="BatchFilterSuidButton" Tag="suid" Content="SUID" Click="BatchFilterButton_Click" Margin="0,0,8,0" />
+                            <Button x:Name="BatchFilterCapabilitiesButton" Tag="capabilities" Content="Capabilities" Click="BatchFilterButton_Click" Margin="0,0,8,0" />
+                            <Button x:Name="BatchFilterUserButton" Tag="unprivileged" Content="普通用户" Click="BatchFilterButton_Click" />
+                        </WrapPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="BatchDetailPanel" /></ScrollViewer>
+                    </DockPanel>
                 </Border>
             </Grid>
         </Grid>

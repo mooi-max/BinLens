@@ -46,6 +46,24 @@ Assert(alternateMatches.Single(match => match.CommandName == "find").RunAs == "r
 Assert(alternateMatches.Single(match => match.CommandName == "python3").Tags == "SETENV", "Expected sudo tags to be retained.");
 Assert(alternateMatches.Single(match => match.CommandName == "kill").Kind == MatchKind.NotFound, "Expected non-listed commands to remain visible.");
 
+const string suidOutput = """
+/usr/bin/find
+/usr/bin/su
+/usr/bin/python3.11
+/usr/local/bin/binsnitch
+""";
+var suidMatches = SudoParser.ParseSuid(suidOutput, entries);
+Assert(suidMatches.Count == 4, "Expected four SUID path matches.");
+Assert(suidMatches.All(match => match.IsSuidAnalysis), "SUID matches must be flagged as SUID analysis.");
+Assert(suidMatches.Single(match => match.CommandName == "find").Kind == MatchKind.Exact, "Expected exact SUID match for find.");
+Assert(suidMatches.Single(match => match.CommandName == "find").Entry!.Variants.Any(variant => variant.Context == "suid"), "Exact SUID match must carry official suid variants.");
+Assert(suidMatches.Single(match => match.CommandName == "su").Kind == MatchKind.NoSuid, "Expected no-SUID-usage match for su.");
+Assert(suidMatches.Single(match => match.CommandName == "python3.11").Kind == MatchKind.Family, "Expected version-family SUID match for python3.11.");
+Assert(suidMatches.Single(match => match.CommandName == "binsnitch").Kind == MatchKind.NotFound, "Expected non-listed SUID path to remain visible.");
+Assert(suidMatches.Single(match => match.CommandName == "find").Path == "/usr/bin/find", "SUID match must retain the original path.");
+Assert(SudoParser.ParseSuid("", entries).Count == 0, "Empty SUID input must yield no matches.");
+Assert(SudoParser.ParseSuid("not-a-path\n/usr/bin/sudo\n", entries).Count == 1, "Non-path noise lines must be ignored by SUID analysis.");
+
 var installedVersion = typeof(UpdateService).Assembly.GetName().Version ?? new Version(0, 0, 0);
 Assert(UpdateService.IsNewer($"{installedVersion.Major}.{installedVersion.Minor}.{installedVersion.Build + 1}"), "Expected semantic update comparison.");
 Assert(!UpdateApplier.IsApplyRequest([]), "Normal startup must not invoke the updater.");

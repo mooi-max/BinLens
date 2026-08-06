@@ -14,7 +14,7 @@ public sealed class GtfobinEntry
     public override string ToString() => string.IsNullOrWhiteSpace(Alias) ? Name : $"{Name}  ·  {Alias}";
 }
 
-public enum MatchKind { Exact, OfficialAlias, Family, NotFound, Forbidden }
+public enum MatchKind { Exact, OfficialAlias, Family, NoSuid, NotFound, Forbidden }
 
 public sealed class BatchMatch
 {
@@ -24,6 +24,7 @@ public sealed class BatchMatch
     public MatchKind Kind { get; init; }
     public GtfobinEntry? Entry { get; init; }
     public bool IsForbidden { get; init; }
+    public bool IsSuidAnalysis { get; init; }
     public string? RunAs { get; init; }
     public string? Tags { get; init; }
 
@@ -34,6 +35,7 @@ public sealed class BatchMatch
             MatchKind.Exact => "精确匹配",
             MatchKind.OfficialAlias => "官方别名",
             MatchKind.Family => "需确认版本",
+            MatchKind.NoSuid => "无 SUID 用法",
             MatchKind.Forbidden => "已禁止",
             _ => "未收录"
         } : Kind switch
@@ -41,6 +43,7 @@ public sealed class BatchMatch
             MatchKind.Exact => "Exact match",
             MatchKind.OfficialAlias => "Official alias",
             MatchKind.Family => "Confirm version",
+            MatchKind.NoSuid => "No SUID usage",
             MatchKind.Forbidden => "Forbidden",
             _ => "Not listed"
         };
@@ -56,6 +59,7 @@ public sealed record BatchResultItem(BatchMatch Match, string Label)
     {
         MatchKind.Exact or MatchKind.OfficialAlias => "Success",
         MatchKind.Family => "Warning",
+        MatchKind.NoSuid => "SecondaryForeground",
         MatchKind.Forbidden => "Danger",
         _ => "SecondaryForeground"
     }];

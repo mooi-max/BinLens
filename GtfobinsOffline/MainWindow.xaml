@@ -97,7 +97,11 @@
                 <Button x:Name="BackButton" Content="← 返回检索" Click="BackButton_Click" Margin="0,0,12,0" />
                 <StackPanel>
                     <TextBlock x:Name="BatchTitle" FontSize="20" FontWeight="SemiBold" />
-                    <TextBlock x:Name="BatchDescription" Foreground="{DynamicResource SecondaryForeground}" FontSize="12" />
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <Button x:Name="BatchModeSudoButton" Tag="sudo" Content="sudo -l 输出" Click="BatchModeButton_Click" Margin="0,0,8,0" />
+                        <Button x:Name="BatchModeSuidButton" Tag="suid" Content="SUID 清单" Click="BatchModeButton_Click" />
+                    </StackPanel>
+                    <TextBlock x:Name="BatchDescription" Foreground="{DynamicResource SecondaryForeground}" FontSize="12" Margin="0,6,0,0" />
                 </StackPanel>
             </StackPanel>
             <Grid Grid.Row="2">

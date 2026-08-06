@@ -13,7 +13,7 @@
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <AssemblyName>BinLens</AssemblyName>
     <RootNamespace>GtfobinsOffline</RootNamespace>
-    <Version Condition="'$(ApplicationVersion)' == ''">0.1.5</Version>
+    <Version Condition="'$(ApplicationVersion)' == ''">0.2.0</Version>
     <Version Condition="'$(ApplicationVersion)' != ''">$(ApplicationVersion)</Version>
     <NuGetAudit>false</NuGetAudit>
     <GitHubRepository Condition="'$(GitHubRepository)' == ''"></GitHubRepository>

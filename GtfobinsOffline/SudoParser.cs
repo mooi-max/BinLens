@@ -58,6 +58,66 @@ public static class SudoParser
         return results.DistinctBy(result => $"{result.OriginalLine}|{result.Path}").ToArray();
     }
 
+    /// <summary>
+    /// Analyzes a plain list of SUID file paths (for example the output of
+    /// <c>find / -perm -u=s -type f 2&gt;/dev/null</c>) and matches each path
+    /// against the GTFOBins entries that have an official <c>suid</c> usage.
+    /// </summary>
+    public static IReadOnlyList<BatchMatch> ParseSuid(string input, IReadOnlyList<GtfobinEntry> entries)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return [];
+        if (input.Length > 1_048_576) throw new ArgumentException("输入内容超过 1 MB，无法安全分析。");
+
+        var exact = entries.ToDictionary(entry => entry.Name, StringComparer.OrdinalIgnoreCase);
+        var aliases = entries.Where(entry => !string.IsNullOrWhiteSpace(entry.Alias))
+            .GroupBy(entry => entry.Alias!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+        var results = new List<BatchMatch>();
+
+        foreach (var raw in input.Replace("\r\n", "\n").Split('\n'))
+        {
+            var line = raw.Trim();
+            if (line.Length == 0) continue;
+            var pathMatch = PathPattern.Match(line);
+            if (!pathMatch.Success) continue;
+            var path = pathMatch.Groups["path"].Value;
+            var name = Path.GetFileName(path);
+
+            GtfobinEntry? entry = null;
+            var kind = MatchKind.NotFound;
+            if (exact.TryGetValue(name, out var exactEntry))
+            {
+                entry = exactEntry;
+                kind = HasSuidUsage(entry) ? MatchKind.Exact : MatchKind.NoSuid;
+            }
+            else if (aliases.TryGetValue(name, out var aliasEntry))
+            {
+                entry = aliasEntry;
+                kind = HasSuidUsage(aliasEntry) ? MatchKind.OfficialAlias : MatchKind.NoSuid;
+            }
+            else if (TryFindFamily(entries, name, out var familyEntry) && HasSuidUsage(familyEntry))
+            {
+                entry = familyEntry;
+                kind = MatchKind.Family;
+            }
+
+            results.Add(new BatchMatch
+            {
+                OriginalLine = raw.Trim(),
+                Path = path,
+                CommandName = name,
+                Entry = entry,
+                Kind = kind,
+                IsSuidAnalysis = true
+            });
+        }
+
+        return results.DistinctBy(result => $"{result.OriginalLine}|{result.Path}").ToArray();
+    }
+
+    private static bool HasSuidUsage(GtfobinEntry? entry)
+        => entry is not null && entry.Variants.Any(variant => string.Equals(variant.Context, "suid", StringComparison.OrdinalIgnoreCase));
+
     private static bool TryFindFamily(IReadOnlyList<GtfobinEntry> entries, string name, out GtfobinEntry? entry)
     {
         var family = Regex.Replace(name, @"\d+(?:\.\d+)*$", string.Empty);
